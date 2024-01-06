@@ -26,42 +26,40 @@ const ToDoAddForm = ({ toDoList, setToDoList }) => {
   };
 
   return (
-    <Box className="h-screen flex justify-center items-center">
-      <Card>
-        <CardContent>
-          <form onSubmit={handleSubmit} noValidate>
-            <Box>
-              <Box
-                display="flex"
-                flexDirection="row"
-                alignItems="center"
-                className="space-x-3"
-              >
-                <TextField
-                  error={error}
-                  id="add-task-textfield"
-                  label="New Task"
-                  variant="outlined"
-                  value={task}
-                  onChange={(e) => {
-                    setTask(e.target.value);
-                    setError(false);
-                  }}
-                />
-                <Button type="submit" variant="contained" color="primary">
-                  Add Task
-                </Button>
-              </Box>
-              {error && (
-                <FormHelperText error={true} className="text-center">
-                  Please enter a task
-                </FormHelperText>
-              )}
+    <Card>
+      <CardContent>
+        <form onSubmit={handleSubmit} noValidate>
+          <Box>
+            <Box
+              display="flex"
+              flexDirection="row"
+              alignItems="center"
+              className="space-x-3"
+            >
+              <TextField
+                error={error}
+                id="add-task-textfield"
+                label="New Task"
+                variant="outlined"
+                value={task}
+                onChange={(e) => {
+                  setTask(e.target.value);
+                  setError(false);
+                }}
+              />
+              <Button type="submit" variant="contained" color="primary">
+                Add Task
+              </Button>
             </Box>
-          </form>
-        </CardContent>
-      </Card>
-    </Box>
+            {error && (
+              <FormHelperText error={true} className="text-center">
+                Please enter a task
+              </FormHelperText>
+            )}
+          </Box>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
