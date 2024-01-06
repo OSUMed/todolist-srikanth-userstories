@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Box, TextField, Card, CardContent } from "@mui/material";
 import FormHelperText from "@mui/material/FormHelperText";
 
-const ToDoAddForm = () => {
+const ToDoAddForm = ({ toDoList, setToDoList }) => {
   const [task, setTask] = useState("");
   const [error, setError] = useState(false);
 
@@ -13,6 +13,15 @@ const ToDoAddForm = () => {
       return;
     }
     setTask("");
+    const newTaskObject = {
+      id: new Date().getTime().toString(),
+      taskName: task,
+      completed: false,
+    };
+    setToDoList((prevToDoList) => {
+      return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
+    });
+
     setError(false);
   };
 
