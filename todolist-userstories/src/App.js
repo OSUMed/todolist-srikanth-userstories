@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="App">
       <div>
-        <div className="text-xl  bg-blue-200">Hello World</div>
+        <div className="text-xl  bg-blue-200">Hello World!</div>
         <Button variant="contained" color="primary">
           Click Me
         </Button>
