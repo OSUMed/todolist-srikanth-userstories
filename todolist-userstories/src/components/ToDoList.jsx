@@ -13,6 +13,7 @@ import {
   IconButton,
   FormGroup,
   FormControlLabel,
+  Input,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,6 +23,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 const ToDoList = () => {
   const [toDoList, setToDoList] = useState([]);
   const [finishedTasks, setFinishedTasks] = useState([]);
+  const [taskToUpdate, setTaskToUpdate] = useState({});
 
   // Local Storage Logic:
   useEffect(() => {
@@ -33,60 +35,98 @@ const ToDoList = () => {
     localStorage.setItem("toDoList", toDoListJSON);
   }, [toDoList]);
 
-  // CRUD Logic:
+  // Priority Logic:
   const handleMoveUpList = (taskId) => {};
   const handleMoveDownList = (taskId) => {};
-  const handleUpdateTask = (taskId) => {};
+
+  // CRUD Logic:
+  const isTaskAlreadyCompleted = (taskId) => finishedTasks.includes(taskId);
+  const markCheckmark = (taskId) => {
+    // if completed task is toggled again, remove it from the finishedTasks array
+    if (isTaskAlreadyCompleted(taskId)) {
+      setFinishedTasks((prevFinishedTasks) =>
+        prevFinishedTasks.filter((id) => id !== taskId)
+      );
+      setToDoList(
+        toDoList.map((task) =>
+          task.id === taskId ? { ...task, completed: false } : task
+        )
+      );
+
+      return;
+    }
+    setFinishedTasks((prevFinishedTasks) => [...prevFinishedTasks, taskId]);
+    setToDoList(
+      toDoList.map((task) =>
+        task.id === taskId ? { ...task, completed: true } : task
+      )
+    );
+  };
+
+  const handleEditTask = (taskId) => {
+    const task = toDoList.find((task) => task.id === taskId);
+    if (task.completed) return;
+    setToDoList((prevToDoList) => {
+      return prevToDoList.map((task) =>
+        task.id === taskId ? { ...task, editing: true } : task
+      );
+    });
+  };
+
+  const handleUpdateTask = (taskId) => {
+    setToDoList((prevToDoList) => {
+      return prevToDoList.map((task) =>
+        task.id === taskId
+          ? { ...task, editing: false, taskName: taskToUpdate }
+          : task
+      );
+    });
+  };
+
   const handleDeleteTask = (taskId) => {
     setToDoList((prevToDoList) => {
       return prevToDoList.filter((task) => task.id !== taskId);
     });
   };
 
-  const isTaskCompleted = (taskId) => finishedTasks.includes(taskId);
-  const handleCheckBoxToggle = (taskId) => {
-    // if completed task is toggled again, remove it from the finishedTasks array
-    if (isTaskCompleted(taskId)) {
-      setFinishedTasks((prevFinishedTasks) =>
-        prevFinishedTasks.filter((id) => id !== taskId)
-      );
-      return;
-    }
-    setFinishedTasks((prevFinishedTasks) => [...prevFinishedTasks, taskId]);
-  };
-
   return (
     <Box className="h-screen flex flex-col justify-center items-center">
-      <Card className="w-[60%] ">
+      <Card className="w-[60%]">
         <CardContent>
           <List>
             {toDoList.map((task) => (
               <Box className="group" key={task.id}>
                 <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2 ">
-                  <Box
-                    className="flex flex-grow"
-                    onClick={() => handleCheckBoxToggle(task.id)}
-                  >
+                  <Box className="flex flex-grow">
                     <FormGroup>
                       <FormControlLabel
                         control={
                           <Checkbox
-                            checked={isTaskCompleted(task.id)}
+                            checked={isTaskAlreadyCompleted(task.id)}
                             disableRipple
-                            onClick={() => handleCheckBoxToggle(task.id)}
+                            onClick={() => markCheckmark(task.id)}
                           />
                         }
                         label={
-                          <Typography
-                            variant="h6"
-                            className={`text-center ${
-                              finishedTasks.includes(task.id)
-                                ? "line-through"
-                                : ""
-                            }`}
-                          >
-                            {task.taskName}
-                          </Typography>
+                          task.editing ? (
+                            <Input
+                              defaultValue={task.taskName}
+                              onChange={(e) => setTaskToUpdate(e.target.value)}
+                              disableUnderline
+                            />
+                          ) : (
+                            <Typography
+                              className={`text-center ${
+                                task.completed ? "line-through" : ""
+                              } ${
+                                !task.editing
+                                  ? "text-black !important"
+                                  : "bg-white text-black"
+                              }`}
+                            >
+                              {task.taskName}
+                            </Typography>
+                          )
                         }
                       />
                     </FormGroup>
@@ -100,15 +140,27 @@ const ToDoList = () => {
                         orientation="vertical"
                         className="space-y-2"
                       >
-                        <Button
-                          variant="outlined"
-                          onClick={() => handleUpdateTask(task.id)}
-                        >
-                          <Typography className="hidden md:block">
-                            Update
-                          </Typography>
-                          <EditIcon />
-                        </Button>
+                        {!task.editing ? (
+                          <Button
+                            variant="outlined"
+                            onClick={() => handleEditTask(task.id)}
+                          >
+                            <Typography className="hidden md:block">
+                              Edit
+                            </Typography>
+                            <EditIcon />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            onClick={() => handleUpdateTask(task.id)}
+                          >
+                            <Typography className="hidden md:block">
+                              Update
+                            </Typography>
+                            <EditIcon />
+                          </Button>
+                        )}
                         <Button
                           color="error"
                           variant="outlined"

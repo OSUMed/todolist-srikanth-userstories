@@ -25,6 +25,7 @@ const ToDoAddForm = ({ setToDoList }) => {
       id: new Date().getTime().toString(),
       taskName: task,
       completed: false,
+      editing: false,
     };
     setToDoList((prevToDoList) => {
       return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
