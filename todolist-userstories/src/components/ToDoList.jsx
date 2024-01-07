@@ -301,28 +301,7 @@ const ToDoList = () => {
                 {toDoList.map((task) => (
                   <Box className="group" key={task.id}>
                     <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2">
-                      <Chip
-                        label={task.priority}
-                        color={
-                          task.priority === "Urgent"
-                            ? "error"
-                            : task.priority === "Medium"
-                            ? "warning"
-                            : task.priority === "Low"
-                            ? "primary"
-                            : "default"
-                        }
-                        variant={
-                          task.priority === "None" ? "outlined" : "default"
-                        }
-                        size="small"
-                        sx={{
-                          position: "absolute",
-                          top: "4px",
-                          left: "4px",
-                          zIndex: 1,
-                        }}
-                      ></Chip>
+                      <PriorityChip task={task} />
                       <Box
                         className="flex flex-grow"
                         onClick={() => handleCheckBoxToggle(task.id)}
@@ -337,16 +316,14 @@ const ToDoList = () => {
                               />
                             }
                             label={
-                              <Box className="flex space-x-3">
-                                <Typography
-                                  variant="h6"
-                                  className={`text-center ${
-                                    task.completed ? "line-through" : ""
-                                  }`}
-                                >
-                                  {task.taskName}
-                                </Typography>
-                              </Box>
+                              <Typography
+                                variant="h6"
+                                className={`text-center ${
+                                  task.completed ? "line-through" : ""
+                                }`}
+                              >
+                                {task.taskName}
+                              </Typography>
                             }
                           />
                         </FormGroup>
@@ -354,78 +331,23 @@ const ToDoList = () => {
 
                       <Box className="flex items-center">
                         <Box>
-                          <Box>
-                            <Box className="flex flex-col items-end">
-                              <Select
-                                labelId="priority-select-label"
-                                renderValue={(selected) => {
-                                  if (selected.length === 0) {
-                                    return <em>Placeholder</em>;
-                                  }
-                                  return selected;
-                                }}
-                                displayEmpty
-                                autoWidth
-                                value={
-                                  <>
-                                    <Typography className="flex items-center justify-center">
-                                      <LabelImportantIcon />
-                                      {task.priority === "" ? (
-                                        <Typography className="hidden lg:block">
-                                          Priority
-                                        </Typography>
-                                      ) : (
-                                        <Typography className="hidden md:block">
-                                          {task.priority}
-                                        </Typography>
-                                      )}
-                                    </Typography>
-                                  </>
-                                }
-                                onChange={(e) =>
-                                  updateTaskPriority(task.id, e.target.value)
-                                }
-                              >
-                                <MenuItem
-                                  value="None"
-                                  style={{ color: "gray" }}
-                                >
-                                  <em>None</em>
-                                </MenuItem>
-                                <MenuItem
-                                  value={"Low"}
-                                  style={{ color: "blue" }}
-                                >
-                                  Low
-                                </MenuItem>
-                                <MenuItem
-                                  value={"Medium"}
-                                  style={{ color: "orange" }}
-                                >
-                                  Medium
-                                </MenuItem>
-                                <MenuItem
-                                  value={"Urgent"}
-                                  style={{ color: "red" }}
-                                >
-                                  Urgent
-                                </MenuItem>
-                              </Select>
-                            </Box>
-                            <Button
-                              color="error"
-                              size="medium"
-                              variant="outlined"
-                              sx={{ mt: 1 }}
-                              className="flex flex-row justify-center items-center space-x-2"
-                              onClick={() => handleDeleteDialogOpen(task)}
-                            >
-                              <Typography className="hidden md:block">
-                                Delete
-                              </Typography>
-                              <DeleteIcon />
-                            </Button>
-                          </Box>
+                          <PrioritySelectOptions
+                            task={task}
+                            updateTaskPriority={updateTaskPriority}
+                          />
+                          <Button
+                            color="error"
+                            size="medium"
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                            className="flex flex-row justify-center items-center space-x-2"
+                            onClick={() => handleDeleteDialogOpen(task)}
+                          >
+                            <Typography className="hidden md:block">
+                              Delete
+                            </Typography>
+                            <DeleteIcon />
+                          </Button>
                         </Box>
                         <Box className="h-full flex flex-col">
                           <IconButton
@@ -484,6 +406,77 @@ const ToDoList = () => {
   );
 };
 
+const PrioritySelectOptions = ({ task, updateTaskPriority }) => {
+  return (
+    <Box className="flex flex-col items-end">
+      <Select
+        labelId="priority-select-label"
+        renderValue={(selected) => {
+          if (selected.length === 0) {
+            return <em>Placeholder</em>;
+          }
+          return selected;
+        }}
+        displayEmpty
+        autoWidth
+        value={
+          <>
+            <Typography className="flex items-center justify-center">
+              <LabelImportantIcon />
+              {task.priority === "" ? (
+                <Typography className="hidden lg:block">Priority</Typography>
+              ) : (
+                <Typography className="hidden md:block">
+                  {task.priority}
+                </Typography>
+              )}
+            </Typography>
+          </>
+        }
+        onChange={(e) => updateTaskPriority(task.id, e.target.value)}
+      >
+        <MenuItem value="None" style={{ color: "gray" }}>
+          <em>None</em>
+        </MenuItem>
+        <MenuItem value={"Low"} style={{ color: "blue" }}>
+          Low
+        </MenuItem>
+        <MenuItem value={"Medium"} style={{ color: "orange" }}>
+          Medium
+        </MenuItem>
+        <MenuItem value={"Urgent"} style={{ color: "red" }}>
+          Urgent
+        </MenuItem>
+      </Select>
+    </Box>
+  );
+};
+
+const PriorityChip = ({ task }) => {
+  return (
+    <Chip
+      label={task.priority}
+      color={
+        task.priority === "Urgent"
+          ? "error"
+          : task.priority === "Medium"
+          ? "warning"
+          : task.priority === "Low"
+          ? "primary"
+          : "default"
+      }
+      variant={task.priority === "None" ? "outlined" : "default"}
+      size="small"
+      sx={{
+        position: "absolute",
+        top: "4px",
+        left: "4px",
+        zIndex: 1,
+      }}
+    />
+  );
+};
+
 const HandleDialogClose = (props) => {
   const { open, handleClose, handleDeleteConfirmation, task } = props;
   return (
@@ -536,16 +529,14 @@ const HandleDialogClose = (props) => {
 
 const MessageSnackbar = ({
   openSnackBar,
-  handleClose,
   feedbackMessage,
   action,
-  handleCloseSnackBarDialog,
   handleCloseSnackBar,
 }) => {
   const { open, severity, vertical, horizontal } = openSnackBar;
 
   return (
-    <div>
+    <Box>
       <Snackbar
         open={open}
         autoHideDuration={4000}
@@ -560,7 +551,7 @@ const MessageSnackbar = ({
           <Box>{feedbackMessage}</Box>
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 
