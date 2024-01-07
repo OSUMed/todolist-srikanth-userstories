@@ -39,6 +39,8 @@ const ToDoList = () => {
     vertical: "bottom",
     horizontal: "right",
   });
+  const [task, setTask] = useState("");
+  const [error, setError] = useState(false);
   const { vertical, horizontal, open } = openSnackBar;
   const [snackBarMessage, setSnackBarMessage] = useState("");
 
@@ -75,10 +77,6 @@ const ToDoList = () => {
     setOpenDeleteDialog(true);
   };
 
-  const handleClose = () => {
-    setOpenDeleteDialog(false);
-  };
-
   const handleDeleteConfirmation = (task) => {
     let taskId = task.id;
     setToDoList((prevToDoList) => {
@@ -106,13 +104,16 @@ const ToDoList = () => {
 
   const action = (
     <React.Fragment>
-      <Button
-        color="secondary"
-        size="small"
-        onClick={handleCloseSnackBarDialog}
-      >
-        UNDO
-      </Button>
+      {selectedTask && (
+        <Button
+          color="secondary"
+          size="small"
+          onClick={handleCloseSnackBarDialog}
+        >
+          UNDO
+        </Button>
+      )}
+
       <IconButton
         size="small"
         aria-label="close"
@@ -123,6 +124,27 @@ const ToDoList = () => {
       </IconButton>
     </React.Fragment>
   );
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!task.trim()) {
+      setError(true);
+      return;
+    }
+    setTask("");
+    const newTaskObject = {
+      id: new Date().getTime().toString(),
+      taskName: task,
+      completed: false,
+    };
+    setOpenSnackBar({ ...openSnackBar, open: true });
+    setSnackBarMessage("Task added successfully");
+    setToDoList((prevToDoList) => {
+      return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
+    });
+
+    setError(false);
+  };
 
   return (
     <Box className="h-screen flex flex-col justify-center items-center">
@@ -189,13 +211,13 @@ const ToDoList = () => {
                     </Box>
                     <Box className="h-full flex flex-col">
                       <IconButton
-                        class="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
+                        className="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
                         onClick={() => handleMoveUpList(task.id)}
                       >
                         <ArrowUpwardIcon />
                       </IconButton>
                       <IconButton
-                        class="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
+                        className="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
                         onClick={() => handleMoveDownList(task.id)}
                       >
                         <ArrowDownwardIcon />
@@ -207,7 +229,16 @@ const ToDoList = () => {
             ))}
           </List>
 
-          <ToDoAddForm setToDoList={setToDoList} />
+          <ToDoAddForm
+            setToDoList={setToDoList}
+            setSnackBarMessage={setSnackBarMessage}
+            setOpenSnackBar={setSnackBarMessage}
+            openSnackBar={openSnackBar}
+            setError={setError}
+            setTask={setTask}
+            error={error}
+            handleSubmit={handleSubmit}
+          />
         </CardContent>
       </Card>
       <Button
@@ -227,7 +258,7 @@ const ToDoList = () => {
       <HandleDialogClose
         setOpen={setOpenDeleteDialog}
         open={openDeleteDialog}
-        handleClose={handleClose}
+        handleClose={handleCloseSnackBarDialog}
         handleDeleteConfirmation={handleDeleteConfirmation}
         task={selectedTask}
       />

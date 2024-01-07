@@ -10,29 +10,7 @@ import {
 import FormHelperText from "@mui/material/FormHelperText";
 import AddIcon from "@mui/icons-material/Add";
 
-const ToDoAddForm = ({ setToDoList }) => {
-  const [task, setTask] = useState("");
-  const [error, setError] = useState(false);
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (!task.trim()) {
-      setError(true);
-      return;
-    }
-    setTask("");
-    const newTaskObject = {
-      id: new Date().getTime().toString(),
-      taskName: task,
-      completed: false,
-    };
-    setToDoList((prevToDoList) => {
-      return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
-    });
-
-    setError(false);
-  };
-
+const ToDoAddForm = ({ task, setTask, error, setError, handleSubmit }) => {
   return (
     <Box className="flex flex-col justify-center items-center">
       <form onSubmit={handleSubmit} noValidate>
