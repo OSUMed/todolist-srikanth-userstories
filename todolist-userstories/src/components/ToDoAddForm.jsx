@@ -12,15 +12,10 @@ import AddIcon from "@mui/icons-material/Add";
 
 const ToDoAddForm = ({ task, setTask, error, setError, handleSubmit }) => {
   return (
-    <Box className="flex flex-col justify-center items-center">
+    <Box className="flex justify-center items-center">
       <form onSubmit={handleSubmit} noValidate>
         <Box>
-          <Box
-            display="flex"
-            flexDirection="row"
-            alignItems="center"
-            className="space-x-3"
-          >
+          <Box className="flex justify-center items-center space-y-3 flex-col sm:flex-row sm:space-x-3 sm:space-y-0">
             <TextField
               error={error}
               id="add-task-textfield"

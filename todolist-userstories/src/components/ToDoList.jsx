@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ToDoAddForm from "./ToDoAddForm";
 import {
   List,
@@ -12,11 +12,18 @@ import {
   ButtonGroup,
   IconButton,
   FormGroup,
+  FormControl,
   FormControlLabel,
   Dialog,
   DialogActions,
   Snackbar,
   Alert,
+  Select,
+  Badge,
+  MenuItem,
+  InputLabel,
+  Paper,
+  Chip,
 } from "@mui/material";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
@@ -26,7 +33,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import LabelImportantIcon from "@mui/icons-material/LabelImportant";
 import PropTypes from "prop-types";
-
+import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
 const ToDoList = () => {
@@ -34,12 +41,12 @@ const ToDoList = () => {
   const [finishedTasks, setFinishedTasks] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  // const [openSnackBar, setOpenSnackBar] = useState(false);
+  const [priority, setPriority] = useState("");
   const [openSnackBar, setOpenSnackBar] = useState({
     open: false,
     vertical: "bottom",
     horizontal: "right",
-    severity: "",
+    severity: "info",
   });
   const [task, setTask] = useState("");
   const [error, setError] = useState(false);
@@ -47,7 +54,11 @@ const ToDoList = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [taskRestored, setTaskRestored] = useState(false);
   const [actionType, setActionType] = useState("");
+  const topRef = useRef(null); // Create a ref
 
+  const scrollToTop = () => {
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
   // Local Storage Logic:
   useEffect(() => {
     const toDoListString = localStorage.getItem("toDoList");
@@ -61,8 +72,80 @@ const ToDoList = () => {
   }, [toDoList]);
 
   // CRUD Logic:
-  const handleMoveUpList = (taskId) => {};
-  const handleMoveDownList = (taskId) => {};
+
+  const getTaskIndex = (taskId) => {
+    return toDoList.findIndex((task) => task.id === taskId);
+  };
+  const handleMoveUpList = (taskId) => {
+    const currentIndex = getTaskIndex(taskId);
+    if (currentIndex > 0) {
+      const reorderedList = [...toDoList];
+      const temp = [
+        reorderedList[currentIndex],
+        reorderedList[currentIndex - 1],
+      ];
+      reorderedList[currentIndex - 1] = temp[0];
+      reorderedList[currentIndex] = temp[1];
+      setToDoList(reorderedList);
+    }
+  };
+
+  const handleMoveDownList = (taskId) => {
+    const currentIndex = getTaskIndex(taskId);
+    if (currentIndex < toDoList.length - 1) {
+      const reorderedList = [...toDoList];
+      const temp = [
+        reorderedList[currentIndex],
+        reorderedList[currentIndex + 1],
+      ];
+      reorderedList[currentIndex + 1] = temp[0];
+      reorderedList[currentIndex] = temp[1];
+      setToDoList(reorderedList);
+    }
+  };
+
+  const updateTaskPriority = (tasks, taskId, newPriority) => {
+    // Grab task and update it:
+    let updatedTask = null;
+    const remainingTasks = tasks.filter((task) => {
+      if (task.id === taskId) {
+        updatedTask = { ...task, priority: newPriority };
+        return false;
+      }
+      return true;
+    });
+
+    // Create Data Strcuture to group tasks by priority
+    const priorityGroups = {
+      Urgent: [],
+      Medium: [],
+      Low: [],
+      None: [],
+    };
+
+    remainingTasks.forEach((task) => {
+      const priority = task.priority || "None";
+      priorityGroups[priority].push(task);
+    });
+
+    // Use spread operator to add it to the front
+    if (updatedTask) {
+      priorityGroups[newPriority] = [
+        updatedTask,
+        ...priorityGroups[newPriority],
+      ];
+    }
+
+    // Update state
+    setToDoList([
+      ...priorityGroups["Urgent"],
+      ...priorityGroups["Medium"],
+      ...priorityGroups["Low"],
+      ...priorityGroups["None"],
+    ]);
+
+    return;
+  };
 
   const isTaskCompleted = (taskId) => finishedTasks.includes(taskId);
   const handleCheckBoxToggle = (taskId) => {
@@ -115,7 +198,7 @@ const ToDoList = () => {
 
   const action = (
     <React.Fragment>
-      {actionType === "delete" && (
+      {actionType === "delete" ? (
         <>
           <Button
             color="secondary"
@@ -133,6 +216,15 @@ const ToDoList = () => {
             <CloseIcon fontSize="small" />
           </IconButton>
         </>
+      ) : (
+        <IconButton
+          size="small"
+          aria-label="close"
+          color="inherit"
+          onClick={handleCloseSnackBar}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
       )}
     </React.Fragment>
   );
@@ -147,6 +239,7 @@ const ToDoList = () => {
       id: new Date().getTime().toString(),
       taskName: task,
       completed: false,
+      priority: "None",
     };
     setToDoList((prevToDoList) => {
       return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
@@ -155,93 +248,210 @@ const ToDoList = () => {
     setTask("");
     setError(false);
     setActionType("create");
-    setOpenSnackBar({ ...openSnackBar, open: true, severity: "success" });
+    setOpenSnackBar({
+      ...openSnackBar,
+      open: true,
+      severity: "success",
+    });
     setSnackBarMessage("Task added successfully");
+    scrollToTop();
+  };
+
+  const onPriorityChange = (priority, taskId) => {
+    updateTaskPriority(toDoList, taskId, priority);
   };
 
   return (
-    <Box className="h-screen flex flex-col justify-center items-center">
-      <Card className="w-[60%] ">
-        <CardContent>
-          <List>
-            {toDoList.map((task) => (
-              <Box className="group" key={task.id}>
-                <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2 ">
-                  <Box
-                    className="flex flex-grow"
-                    onClick={() => handleCheckBoxToggle(task.id)}
-                  >
-                    <FormGroup>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={isTaskCompleted(task.id)}
-                            disableRipple
-                            onClick={() => handleCheckBoxToggle(task.id)}
-                          />
-                        }
-                        label={
-                          <Typography
-                            variant="h6"
-                            className={`text-center ${
-                              finishedTasks.includes(task.id)
-                                ? "line-through"
-                                : ""
-                            }`}
-                          >
-                            {task.taskName}
-                          </Typography>
-                        }
-                      />
-                    </FormGroup>
-                  </Box>
+    <Box className="h-screen flex flex-col justify-center items-center m-4">
+      <Typography variant="h3" className="mb-4 border-b border-black w-1/2">
+        To Do List
+      </Typography>
 
-                  <Box className="flex items-end">
-                    <Box>
-                      <ButtonGroup
-                        variant="text"
-                        aria-label="text button group"
-                        orientation="vertical"
-                        className="space-y-2"
-                      >
-                        <Button variant="outlined">
-                          <Typography className="hidden md:block">
-                            Priority
-                          </Typography>
-                          <LabelImportantIcon />
-                        </Button>
-                        <Button
-                          color="error"
-                          variant="outlined"
-                          onClick={() => handleDeleteDialogOpen(task)}
-                        >
-                          <Typography className="hidden md:block">
-                            Delete
-                          </Typography>
-                          <DeleteIcon />
-                        </Button>
-                      </ButtonGroup>
-                    </Box>
-                    <Box className="h-full flex flex-col">
-                      <IconButton
-                        className="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
-                        onClick={() => handleMoveUpList(task.id)}
-                      >
-                        <ArrowUpwardIcon />
-                      </IconButton>
-                      <IconButton
-                        className="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
-                        onClick={() => handleMoveDownList(task.id)}
-                      >
-                        <ArrowDownwardIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </ListItem>
+      <Paper
+        sx={{
+          width: "100%",
+          maxHeight: "60vh",
+          mx: "auto",
+          p: 4,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            maxHeight: "60vh",
+            mx: "auto",
+            p: 4,
+            overflowY: "auto",
+          }}
+        >
+          <Box ref={topRef}></Box>
+          <CardContent>
+            {toDoList.length === 0 ? (
+              <Box className="flex flex-col justify-center items-center mb-6">
+                <Box className="flex items-center">
+                  <Typography variant="h6" className="mb-4">
+                    No tasks to display
+                  </Typography>
+                </Box>
               </Box>
-            ))}
-          </List>
+            ) : (
+              <List>
+                {toDoList.map((task) => (
+                  <Box className="group" key={task.id}>
+                    <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2">
+                      <Chip
+                        label={task.priority}
+                        color={
+                          task.priority === "Urgent"
+                            ? "error"
+                            : task.priority === "Medium"
+                            ? "warning"
+                            : task.priority === "Low"
+                            ? "primary"
+                            : "default"
+                        }
+                        variant={
+                          task.priority === "None" ? "outlined" : "default"
+                        }
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: "4px",
+                          left: "4px",
+                          zIndex: 1,
+                        }}
+                      ></Chip>
+                      <Box
+                        className="flex flex-grow"
+                        onClick={() => handleCheckBoxToggle(task.id)}
+                      >
+                        <FormGroup>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={isTaskCompleted(task.id)}
+                                disableRipple
+                                onClick={() => handleCheckBoxToggle(task.id)}
+                              />
+                            }
+                            label={
+                              <Box className="flex space-x-3">
+                                <Typography
+                                  variant="h6"
+                                  className={`text-center ${
+                                    finishedTasks.includes(task.id)
+                                      ? "line-through"
+                                      : ""
+                                  }`}
+                                >
+                                  {task.taskName}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </FormGroup>
+                      </Box>
 
+                      <Box className="flex items-center">
+                        <Box>
+                          <Box>
+                            <Box className="flex flex-col items-end">
+                              <Select
+                                labelId="priority-select-label"
+                                renderValue={(selected) => {
+                                  if (selected.length === 0) {
+                                    return <em>Placeholder</em>;
+                                  }
+                                  return selected;
+                                }}
+                                displayEmpty
+                                autoWidth
+                                value={
+                                  <>
+                                    <Typography className="flex items-center justify-center">
+                                      <LabelImportantIcon />
+                                      {task.priority === "" ? (
+                                        <Typography className="hidden lg:block">
+                                          Priority
+                                        </Typography>
+                                      ) : (
+                                        <Typography className="hidden md:block">
+                                          {task.priority}
+                                        </Typography>
+                                      )}
+                                    </Typography>
+                                  </>
+                                }
+                                onChange={(e) =>
+                                  onPriorityChange(e.target.value, task.id)
+                                }
+                              >
+                                <MenuItem
+                                  value="None"
+                                  style={{ color: "gray" }}
+                                >
+                                  <em>None</em>
+                                </MenuItem>
+                                <MenuItem
+                                  value={"Low"}
+                                  style={{ color: "blue" }}
+                                >
+                                  Low
+                                </MenuItem>
+                                <MenuItem
+                                  value={"Medium"}
+                                  style={{ color: "orange" }}
+                                >
+                                  Medium
+                                </MenuItem>
+                                <MenuItem
+                                  value={"Urgent"}
+                                  style={{ color: "red" }}
+                                >
+                                  Urgent
+                                </MenuItem>
+                              </Select>
+                            </Box>
+                            <Button
+                              color="error"
+                              size="medium"
+                              variant="outlined"
+                              sx={{ mt: 1 }}
+                              className="flex flex-row justify-center items-center space-x-2"
+                              onClick={() => handleDeleteDialogOpen(task)}
+                            >
+                              <Typography className="hidden md:block">
+                                Delete
+                              </Typography>
+                              <DeleteIcon />
+                            </Button>
+                          </Box>
+                        </Box>
+                        <Box className="h-full flex flex-col">
+                          <IconButton
+                            className="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
+                            onClick={() => handleMoveUpList(task.id)}
+                          >
+                            <ArrowUpwardIcon />
+                          </IconButton>
+                          <IconButton
+                            className="text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-800 p-2"
+                            onClick={() => handleMoveDownList(task.id)}
+                          >
+                            <ArrowDownwardIcon />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </ListItem>
+                  </Box>
+                ))}
+              </List>
+            )}
+          </CardContent>
+        </Box>
+        <Box>
           <ToDoAddForm
             key={(toDoList.length > 0 && toDoList[0].id) || 0}
             setToDoList={setToDoList}
@@ -253,22 +463,9 @@ const ToDoList = () => {
             error={error}
             handleSubmit={handleSubmit}
           />
-        </CardContent>
-      </Card>
-      <Button
-        variant="outlined"
-        // onClick={() => setOpenSnackBar(true)}
-        onClick={() =>
-          setOpenSnackBar({
-            open: true,
-            vertical: "top",
-            horizontal: "left",
-          })
-        }
-        className="p-4"
-      >
-        Open simple dialog
-      </Button>
+        </Box>
+      </Paper>
+
       <HandleDialogClose
         setOpen={setOpenDeleteDialog}
         open={openDeleteDialog}
@@ -296,10 +493,27 @@ const HandleDialogClose = (props) => {
       <DialogTitle>Delete message</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Are you sure you want to delete this message? This cannot be undone.
+          Are you sure you want to delete this message?
         </DialogContentText>
-        <Card variant="outlined" sx={{ margin: 2, padding: 2 }}>
-          <Typography variant="body2">{task && task.taskName}</Typography>
+        <Card
+          variant="outlined"
+          sx={{ margin: 2, padding: 2 }}
+          className="flex flex-row justify-start items-center space-x-2"
+        >
+          <Badge
+            color={
+              task?.priority === "Urgent"
+                ? "error"
+                : task?.priority === "Medium"
+                ? "warning"
+                : task?.priority === "Low"
+                ? "primary"
+                : "default"
+            }
+            variant="dot"
+          >
+            <Typography variant="body2">{task && task.taskName}</Typography>
+          </Badge>
         </Card>
       </DialogContent>
       <DialogActions>
@@ -331,19 +545,21 @@ const MessageSnackbar = ({
   handleCloseSnackBar,
 }) => {
   const { open, severity, vertical, horizontal } = openSnackBar;
+
   return (
     <div>
       <Snackbar
         open={open}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         anchorOrigin={{ vertical, horizontal }}
+        onClose={handleCloseSnackBar}
       >
         <Alert
           onClose={handleCloseSnackBar}
           severity={severity}
           action={action}
         >
-          {feedbackMessage}
+          <Box>{feedbackMessage}</Box>
         </Alert>
       </Snackbar>
     </div>
