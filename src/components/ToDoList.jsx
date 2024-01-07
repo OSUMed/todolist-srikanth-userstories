@@ -354,7 +354,7 @@ const ToDoList = () => {
             )}
           </CardContent>
         </Box>
-        <Box>
+        <Box className="mt-3 sm:mt-0">
           <ToDoAddForm
             key={(toDoList.length > 0 && toDoList[0].id) || 0}
             setToDoList={setToDoList}
