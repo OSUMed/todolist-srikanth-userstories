@@ -301,32 +301,15 @@ const ToDoList = () => {
                 {toDoList.map((task) => (
                   <Box className="group" key={task.id}>
                     <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2">
-                      <PriorityChip task={task} />
                       <Box
                         className="flex flex-grow"
                         onClick={() => handleCheckBoxToggle(task.id)}
                       >
-                        <FormGroup>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={task.completed}
-                                disableRipple
-                                onClick={() => handleCheckBoxToggle(task.id)}
-                              />
-                            }
-                            label={
-                              <Typography
-                                variant="h6"
-                                className={`text-center ${
-                                  task.completed ? "line-through" : ""
-                                }`}
-                              >
-                                {task.taskName}
-                              </Typography>
-                            }
-                          />
-                        </FormGroup>
+                        <PriorityChip task={task} />
+                        <TaskLabelComponent
+                          handleCheckBoxToggle={handleCheckBoxToggle}
+                          task={task}
+                        />
                       </Box>
 
                       <Box className="flex items-center">
@@ -555,4 +538,27 @@ const MessageSnackbar = ({
   );
 };
 
+const TaskLabelComponent = ({ handleCheckBoxToggle, task }) => {
+  return (
+    <FormGroup>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={task.completed}
+            disableRipple
+            onClick={() => handleCheckBoxToggle(task.id)}
+          />
+        }
+        label={
+          <Typography
+            variant="h6"
+            className={`text-center ${task.completed ? "line-through" : ""}`}
+          >
+            {task.taskName}
+          </Typography>
+        }
+      />
+    </FormGroup>
+  );
+};
 export default ToDoList;
