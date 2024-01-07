@@ -15,6 +15,7 @@ import {
   FormControlLabel,
   Dialog,
   DialogActions,
+  Snackbar,
 } from "@mui/material";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
@@ -25,11 +26,21 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import LabelImportantIcon from "@mui/icons-material/LabelImportant";
 import PropTypes from "prop-types";
 
+import CloseIcon from "@mui/icons-material/Close";
+
 const ToDoList = () => {
   const [toDoList, setToDoList] = useState([]);
   const [finishedTasks, setFinishedTasks] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  // const [openSnackBar, setOpenSnackBar] = useState(false);
+  const [openSnackBar, setOpenSnackBar] = useState({
+    open: false,
+    vertical: "bottom",
+    horizontal: "right",
+  });
+  const { vertical, horizontal, open } = openSnackBar;
+  const [snackBarMessage, setSnackBarMessage] = useState("");
 
   // Local Storage Logic:
   useEffect(() => {
@@ -74,7 +85,44 @@ const ToDoList = () => {
       return prevToDoList.filter((task) => task.id !== taskId);
     });
     setOpenDeleteDialog(false);
+    setOpenSnackBar({ ...openSnackBar, open: true });
+    setSnackBarMessage("Task deleted successfully");
   };
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpenSnackBar({ ...openSnackBar, open: false });
+  };
+
+  const handleCloseSnackBarDialog = () => {
+    setOpenSnackBar({ ...openSnackBar, open: false });
+    setToDoList((prevToDoList) => {
+      return prevToDoList ? [selectedTask, ...prevToDoList] : [selectedTask];
+    });
+    setSnackBarMessage("Task restored successfully");
+  };
+
+  const action = (
+    <React.Fragment>
+      <Button
+        color="secondary"
+        size="small"
+        onClick={handleCloseSnackBarDialog}
+      >
+        UNDO
+      </Button>
+      <IconButton
+        size="small"
+        aria-label="close"
+        color="inherit"
+        onClick={handleCloseSnackBar}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </React.Fragment>
+  );
 
   return (
     <Box className="h-screen flex flex-col justify-center items-center">
@@ -162,7 +210,18 @@ const ToDoList = () => {
           <ToDoAddForm setToDoList={setToDoList} />
         </CardContent>
       </Card>
-      <Button variant="outlined" onClick={setOpenDeleteDialog} className="p-4">
+      <Button
+        variant="outlined"
+        // onClick={() => setOpenSnackBar(true)}
+        onClick={() =>
+          setOpenSnackBar({
+            open: true,
+            vertical: "top",
+            horizontal: "left",
+          })
+        }
+        className="p-4"
+      >
         Open simple dialog
       </Button>
       <HandleDialogClose
@@ -171,6 +230,13 @@ const ToDoList = () => {
         handleClose={handleClose}
         handleDeleteConfirmation={handleDeleteConfirmation}
         task={selectedTask}
+      />
+
+      <MessageSnackbar
+        open={openSnackBar.open}
+        handleClose={handleCloseSnackBar}
+        feedbackMessage={snackBarMessage}
+        action={action}
       />
     </Box>
   );
@@ -206,6 +272,20 @@ const HandleDialogClose = (props) => {
         </Button>
       </DialogActions>
     </Dialog>
+  );
+};
+
+const MessageSnackbar = ({ open, handleClose, feedbackMessage, action }) => {
+  return (
+    <div>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        message={feedbackMessage}
+        action={action}
+      />
+    </div>
   );
 };
 
