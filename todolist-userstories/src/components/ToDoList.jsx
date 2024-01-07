@@ -12,11 +12,15 @@ import {
   ButtonGroup,
   IconButton,
   FormGroup,
+  FormControl,
   FormControlLabel,
   Dialog,
   DialogActions,
   Snackbar,
   Alert,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
@@ -34,6 +38,7 @@ const ToDoList = () => {
   const [finishedTasks, setFinishedTasks] = useState([]);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [priority, setPriority] = useState("");
   // const [openSnackBar, setOpenSnackBar] = useState(false);
   const [openSnackBar, setOpenSnackBar] = useState({
     open: false,
@@ -176,6 +181,7 @@ const ToDoList = () => {
       id: new Date().getTime().toString(),
       taskName: task,
       completed: false,
+      priority: "",
     };
     setToDoList((prevToDoList) => {
       return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
@@ -186,6 +192,14 @@ const ToDoList = () => {
     setActionType("create");
     setOpenSnackBar({ ...openSnackBar, open: true, severity: "success" });
     setSnackBarMessage("Task added successfully");
+  };
+
+  const onPriorityChange = (priority, taskId) => {
+    setPriority(priority);
+    const taskIndex = getTaskIndex(taskId);
+    const newToDoList = [...toDoList];
+    newToDoList[taskIndex].priority = priority;
+    setToDoList(newToDoList);
   };
 
   return (
@@ -225,23 +239,48 @@ const ToDoList = () => {
                     </FormGroup>
                   </Box>
 
-                  <Box className="flex items-end">
+                  <Box className="flex items-center">
                     <Box>
-                      <ButtonGroup
-                        variant="text"
-                        aria-label="text button group"
-                        orientation="vertical"
-                        className="space-y-2"
-                      >
-                        <Button variant="outlined">
-                          <Typography className="hidden md:block">
-                            Priority
-                          </Typography>
-                          <LabelImportantIcon />
-                        </Button>
+                      <Box className="flex flex-col items-end">
+                        <Box className="flex">
+                          <FormControl>
+                            <Select
+                              labelId="priority-select-label"
+                              renderValue={(selected) => {
+                                if (selected.length === 0) {
+                                  return <em>Placeholder</em>;
+                                }
+                                return selected;
+                              }}
+                              displayEmpty
+                              value={
+                                task.priority === "" ? (
+                                  "Priority Level"
+                                ) : (
+                                  <Typography>
+                                    <LabelImportantIcon /> {task.priority}
+                                  </Typography>
+                                )
+                              }
+                              sx={{ m: 1, width: 150, height: 50 }}
+                              onChange={(e) =>
+                                onPriorityChange(e.target.value, task.id)
+                              }
+                            >
+                              <MenuItem value="None">
+                                <em>None</em>
+                              </MenuItem>
+                              <MenuItem value={"Low"}>Low</MenuItem>
+                              <MenuItem value={"Medium"}>Medium</MenuItem>
+                              <MenuItem value={"Urgent"}>Urgent</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Box>
                         <Button
                           color="error"
                           variant="outlined"
+                          sx={{ m: 1, width: 120, height: 50 }}
+                          className="flex flex-row justify-center items-center space-x-2"
                           onClick={() => handleDeleteDialogOpen(task)}
                         >
                           <Typography className="hidden md:block">
@@ -249,7 +288,7 @@ const ToDoList = () => {
                           </Typography>
                           <DeleteIcon />
                         </Button>
-                      </ButtonGroup>
+                      </Box>
                     </Box>
                     <Box className="h-full flex flex-col">
                       <IconButton
@@ -376,6 +415,20 @@ const MessageSnackbar = ({
         </Alert>
       </Snackbar>
     </div>
+  );
+};
+
+const PriorityDropdown = ({ priority, onPriorityChange }) => {
+  return (
+    <Select
+      value={priority}
+      onChange={(e) => onPriorityChange(e.target.value)}
+      style={{ marginLeft: "auto" }} // This pushes the dropdown to the right
+    >
+      <MenuItem value={1}>1</MenuItem>
+      <MenuItem value={2}>2</MenuItem>
+      <MenuItem value={3}>3</MenuItem>
+    </Select>
   );
 };
 
