@@ -61,8 +61,37 @@ const ToDoList = () => {
   }, [toDoList]);
 
   // CRUD Logic:
-  const handleMoveUpList = (taskId) => {};
-  const handleMoveDownList = (taskId) => {};
+
+  const getTaskIndex = (taskId) => {
+    return toDoList.findIndex((task) => task.id === taskId);
+  };
+  const handleMoveUpList = (taskId) => {
+    const currentIndex = getTaskIndex(taskId);
+    if (currentIndex > 0) {
+      const reorderedList = [...toDoList];
+      const temp = [
+        reorderedList[currentIndex],
+        reorderedList[currentIndex - 1],
+      ];
+      reorderedList[currentIndex - 1] = temp[0];
+      reorderedList[currentIndex] = temp[1];
+      setToDoList(reorderedList);
+    }
+  };
+
+  const handleMoveDownList = (taskId) => {
+    const currentIndex = getTaskIndex(taskId);
+    if (currentIndex < toDoList.length - 1) {
+      const reorderedList = [...toDoList];
+      const temp = [
+        reorderedList[currentIndex],
+        reorderedList[currentIndex + 1],
+      ];
+      reorderedList[currentIndex + 1] = temp[0];
+      reorderedList[currentIndex] = temp[1];
+      setToDoList(reorderedList);
+    }
+  };
 
   const isTaskCompleted = (taskId) => finishedTasks.includes(taskId);
   const handleCheckBoxToggle = (taskId) => {
