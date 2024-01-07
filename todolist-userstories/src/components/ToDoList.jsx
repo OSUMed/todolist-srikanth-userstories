@@ -31,7 +31,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import LabelImportantIcon from "@mui/icons-material/LabelImportant";
 import PropTypes from "prop-types";
-
+import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
 const ToDoList = () => {
@@ -65,17 +65,6 @@ const ToDoList = () => {
     const toDoListJSON = JSON.stringify(toDoList);
     localStorage.setItem("toDoList", toDoListJSON);
   }, [toDoList]);
-
-  const sortTasks = (tasks) => {
-    const urgentTasks = tasks.filter((task) => task.priority === "Urgent");
-    const mediumTasks = tasks.filter((task) => task.priority === "Medium");
-    const lowTasks = tasks.filter((task) => task.priority === "Low");
-    const noneTasks = tasks.filter(
-      (task) => task.priority === "" || task.priority === "None"
-    );
-
-    return [...urgentTasks, ...mediumTasks, ...lowTasks, ...noneTasks];
-  };
 
   // CRUD Logic:
 
@@ -245,7 +234,7 @@ const ToDoList = () => {
       id: new Date().getTime().toString(),
       taskName: task,
       completed: false,
-      priority: "",
+      priority: "None",
     };
     setToDoList((prevToDoList) => {
       return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
@@ -278,7 +267,7 @@ const ToDoList = () => {
               <Box className="group" key={task.id}>
                 <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2 ">
                   <Chip
-                    label={task.priority === "" ? "None" : task.priority}
+                    label={task.priority}
                     color={
                       task.priority === "Urgent"
                         ? "error"
@@ -330,57 +319,60 @@ const ToDoList = () => {
 
                   <Box className="flex items-center">
                     <Box>
-                      <Box className="flex flex-col items-end hidden sm:block">
-                        <Box className="flex">
-                          <FormControl>
-                            <Select
-                              labelId="priority-select-label"
-                              renderValue={(selected) => {
-                                if (selected.length === 0) {
-                                  return <em>Placeholder</em>;
-                                }
-                                return selected;
-                              }}
-                              displayEmpty
-                              autoWidth
-                              value={
-                                task.priority === "" ? (
-                                  "Priority Level"
-                                ) : (
-                                  <Typography>
-                                    <LabelImportantIcon /> {task.priority}
-                                  </Typography>
-                                )
+                      <Box>
+                        <Box className="flex flex-col items-end">
+                          <Select
+                            labelId="priority-select-label"
+                            renderValue={(selected) => {
+                              if (selected.length === 0) {
+                                return <em>Placeholder</em>;
                               }
-                              onChange={(e) =>
-                                onPriorityChange(e.target.value, task.id)
-                              }
+                              return selected;
+                            }}
+                            displayEmpty
+                            autoWidth
+                            value={
+                              <>
+                                <Typography className="flex items-center justify-center">
+                                  <LabelImportantIcon />
+                                  {task.priority === "" ? (
+                                    <Typography className="hidden lg:block">
+                                      Priority
+                                    </Typography>
+                                  ) : (
+                                    <Typography className="hidden md:block">
+                                      {task.priority}
+                                    </Typography>
+                                  )}
+                                </Typography>
+                              </>
+                            }
+                            onChange={(e) =>
+                              onPriorityChange(e.target.value, task.id)
+                            }
+                          >
+                            <MenuItem value="None" style={{ color: "gray" }}>
+                              <em>None</em>
+                            </MenuItem>
+                            <MenuItem value={"Low"} style={{ color: "blue" }}>
+                              Low
+                            </MenuItem>
+                            <MenuItem
+                              value={"Medium"}
+                              style={{ color: "orange" }}
                             >
-                              <MenuItem value="None" style={{ color: "gray" }}>
-                                <em>None</em>
-                              </MenuItem>
-                              <MenuItem value={"Low"} style={{ color: "blue" }}>
-                                Low
-                              </MenuItem>
-                              <MenuItem
-                                value={"Medium"}
-                                style={{ color: "orange" }}
-                              >
-                                Medium
-                              </MenuItem>
-                              <MenuItem
-                                value={"Urgent"}
-                                style={{ color: "red" }}
-                              >
-                                Urgent
-                              </MenuItem>
-                            </Select>
-                          </FormControl>
+                              Medium
+                            </MenuItem>
+                            <MenuItem value={"Urgent"} style={{ color: "red" }}>
+                              Urgent
+                            </MenuItem>
+                          </Select>
                         </Box>
                         <Button
                           color="error"
+                          size="medium"
                           variant="outlined"
-                          sx={{ m: 1, width: 120, height: 50 }}
+                          sx={{ mt: 1 }}
                           className="flex flex-row justify-center items-center space-x-2"
                           onClick={() => handleDeleteDialogOpen(task)}
                         >
@@ -452,7 +444,7 @@ const HandleDialogClose = (props) => {
       <DialogTitle>Delete message</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Are you sure you want to delete this message? This cannot be undone.
+          Are you sure you want to delete this message?
         </DialogContentText>
         <Card variant="outlined" sx={{ margin: 2, padding: 2 }}>
           <Typography variant="body2">{task && task.taskName}</Typography>
