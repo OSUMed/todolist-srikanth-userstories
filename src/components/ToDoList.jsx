@@ -406,7 +406,7 @@ const PrioritySelectOptions = ({ task, updateTaskPriority }) => {
           <>
             <Typography className="flex items-center justify-center">
               <LabelImportantIcon />
-              {task.priority === "" ? (
+              {task.priority === "None" ? (
                 <Typography className="hidden lg:block">Priority</Typography>
               ) : (
                 <Typography className="hidden md:block">
