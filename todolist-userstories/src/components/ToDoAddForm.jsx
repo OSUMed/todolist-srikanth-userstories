@@ -30,7 +30,6 @@ const ToDoAddForm = ({ task, setTask, error, setError, handleSubmit }) => {
               onChange={(e) => {
                 setTask(e.target.value);
                 if (error) setError(false);
-                console.log("child onChange", e.target.value);
               }}
             />
             <Box>

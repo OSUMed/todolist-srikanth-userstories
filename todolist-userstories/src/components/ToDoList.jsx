@@ -56,10 +56,6 @@ const ToDoList = () => {
     localStorage.setItem("toDoList", toDoListJSON);
   }, [toDoList]);
 
-  useEffect(() => {
-    console.log("task in useeffect", task);
-  }, [task]);
-
   // CRUD Logic:
   const handleMoveUpList = (taskId) => {};
   const handleMoveDownList = (taskId) => {};
@@ -151,7 +147,6 @@ const ToDoList = () => {
     setSnackBarMessage("Task added successfully");
   };
 
-  console.log("task is: ", task);
   return (
     <Box className="h-screen flex flex-col justify-center items-center">
       <Card className="w-[60%] ">
