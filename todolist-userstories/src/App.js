@@ -1,12 +1,13 @@
 import "./App.css";
 import ToDoList from "./components/ToDoList";
+import Container from "@mui/material/Container";
 
 function App() {
   return (
     <div className="App">
-      <div>
+      <Container maxWidth="lg">
         <ToDoList />
-      </div>
+      </Container>
     </div>
   );
 }
