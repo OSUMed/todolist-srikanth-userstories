@@ -33,49 +33,129 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import LabelImportantIcon from "@mui/icons-material/LabelImportant";
 import PropTypes from "prop-types";
-import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
 const ToDoList = () => {
   const [toDoList, setToDoList] = useState([]);
-  const [finishedTasks, setFinishedTasks] = useState([]);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const [task, setTask] = useState("");
+  const [error, setError] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [priority, setPriority] = useState("");
+
+  // Dialog and Snackbar States:
+  const [actionCRUDType, setActionCRUDType] = useState("");
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [openSnackBar, setOpenSnackBar] = useState({
     open: false,
     vertical: "bottom",
     horizontal: "right",
     severity: "info",
   });
-  const [task, setTask] = useState("");
-  const [error, setError] = useState(false);
   const { vertical, horizontal, open, severity } = openSnackBar;
-  const [snackBarMessage, setSnackBarMessage] = useState("");
-  const [taskRestored, setTaskRestored] = useState(false);
-  const [actionType, setActionType] = useState("");
-  const topRef = useRef(null); // Create a ref
 
+  // Create a reference to scroll to the top of the page
+  const topRef = useRef(null);
   const scrollToTop = () => {
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
   // Local Storage Logic:
   useEffect(() => {
     const toDoListString = localStorage.getItem("toDoList");
-
     setToDoList(JSON.parse(toDoListString) || []);
   }, []);
-
   useEffect(() => {
     const toDoListJSON = JSON.stringify(toDoList);
     localStorage.setItem("toDoList", toDoListJSON);
   }, [toDoList]);
 
-  // CRUD Logic:
+  // Add Task Logic:
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!task.trim()) {
+      setError(true);
+      return;
+    }
+    const newTaskObject = {
+      id: new Date().getTime().toString(),
+      taskName: task,
+      completed: false,
+      priority: "None",
+    };
+    setToDoList((prevToDoList) => {
+      return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
+    });
 
+    setTask("");
+    setError(false);
+    setActionCRUDType("create");
+    setOpenSnackBar({
+      ...openSnackBar,
+      open: true,
+      severity: "success",
+    });
+    setSnackBarMessage("Task added successfully");
+    scrollToTop();
+  };
+
+  // Finish/Update Task Logic:
+  const handleCheckBoxToggle = (taskId) => {
+    const updatedToDoList = toDoList.map((task) => {
+      if (task.id === taskId) {
+        return {
+          ...task,
+          completed: !task.completed,
+        };
+      }
+      return task;
+    });
+    setToDoList(updatedToDoList);
+  };
+
+  // Delete Logic: Dialog Open, Delete Confirmation, Restore Deleted Task, Close Delete-SnackBar
+
+  const handleDeleteDialogOpen = (task) => {
+    setOpenDeleteDialog(false);
+    setSelectedTask(task);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleDeleteConfirmation = (task) => {
+    setActionCRUDType("delete");
+    let taskId = task.id;
+    setToDoList((prevToDoList) => {
+      return prevToDoList.filter((task) => task.id !== taskId);
+    });
+    setOpenDeleteDialog(false);
+    setOpenSnackBar({ ...openSnackBar, open: true, severity: "success" });
+    setSnackBarMessage("Task deleted successfully");
+  };
+
+  const handleRestoreSnackBarDialog = () => {
+    setOpenSnackBar({ ...openSnackBar, open: true });
+    setToDoList((prevToDoList) => {
+      return prevToDoList ? [selectedTask, ...prevToDoList] : [selectedTask];
+    });
+    setSelectedTask("");
+
+    setActionCRUDType("restore");
+    setSnackBarMessage("Task restored successfully");
+  };
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenDeleteDialog(false);
+    setSelectedTask("");
+    setOpenSnackBar({ ...openSnackBar, open: false });
+  };
+
+  // Task Priority Logic:
   const getTaskIndex = (taskId) => {
     return toDoList.findIndex((task) => task.id === taskId);
   };
+
   const handleMoveUpList = (taskId) => {
     const currentIndex = getTaskIndex(taskId);
     if (currentIndex > 0) {
@@ -104,10 +184,10 @@ const ToDoList = () => {
     }
   };
 
-  const updateTaskPriority = (tasks, taskId, newPriority) => {
+  const updateTaskPriority = (taskId, newPriority) => {
     // Grab task and update it:
     let updatedTask = null;
-    const remainingTasks = tasks.filter((task) => {
+    const remainingTasks = toDoList.filter((task) => {
       if (task.id === taskId) {
         updatedTask = { ...task, priority: newPriority };
         return false;
@@ -147,58 +227,10 @@ const ToDoList = () => {
     return;
   };
 
-  const isTaskCompleted = (taskId) => finishedTasks.includes(taskId);
-  const handleCheckBoxToggle = (taskId) => {
-    // if completed task is toggled again, remove it from the finishedTasks array
-    if (isTaskCompleted(taskId)) {
-      setFinishedTasks((prevFinishedTasks) =>
-        prevFinishedTasks.filter((id) => id !== taskId)
-      );
-      return;
-    }
-    setFinishedTasks((prevFinishedTasks) => [...prevFinishedTasks, taskId]);
-  };
-
-  const handleDeleteDialogOpen = (task) => {
-    setOpenDeleteDialog(false);
-    setSelectedTask(task);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleDeleteConfirmation = (task) => {
-    setTaskRestored(false);
-    setActionType("delete");
-    let taskId = task.id;
-    setToDoList((prevToDoList) => {
-      return prevToDoList.filter((task) => task.id !== taskId);
-    });
-    setOpenDeleteDialog(false);
-    setOpenSnackBar({ ...openSnackBar, open: true, severity: "success" });
-    setSnackBarMessage("Task deleted successfully");
-  };
-  const handleCloseSnackBar = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setOpenDeleteDialog(false);
-    setSelectedTask("");
-    setOpenSnackBar({ ...openSnackBar, open: false });
-  };
-
-  const handleRestoreSnackBarDialog = () => {
-    setOpenSnackBar({ ...openSnackBar, open: true });
-    setToDoList((prevToDoList) => {
-      return prevToDoList ? [selectedTask, ...prevToDoList] : [selectedTask];
-    });
-    setSelectedTask("");
-    setTaskRestored(true);
-    setActionType("restore");
-    setSnackBarMessage("Task restored successfully");
-  };
-
+  // Snackbar Action:
   const action = (
     <React.Fragment>
-      {actionType === "delete" ? (
+      {actionCRUDType === "delete" ? (
         <>
           <Button
             color="secondary"
@@ -228,38 +260,6 @@ const ToDoList = () => {
       )}
     </React.Fragment>
   );
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (!task.trim()) {
-      setError(true);
-      return;
-    }
-    const newTaskObject = {
-      id: new Date().getTime().toString(),
-      taskName: task,
-      completed: false,
-      priority: "None",
-    };
-    setToDoList((prevToDoList) => {
-      return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
-    });
-
-    setTask("");
-    setError(false);
-    setActionType("create");
-    setOpenSnackBar({
-      ...openSnackBar,
-      open: true,
-      severity: "success",
-    });
-    setSnackBarMessage("Task added successfully");
-    scrollToTop();
-  };
-
-  const onPriorityChange = (priority, taskId) => {
-    updateTaskPriority(toDoList, taskId, priority);
-  };
 
   return (
     <Box className="h-screen flex flex-col justify-center items-center m-4">
@@ -331,7 +331,7 @@ const ToDoList = () => {
                           <FormControlLabel
                             control={
                               <Checkbox
-                                checked={isTaskCompleted(task.id)}
+                                checked={task.completed}
                                 disableRipple
                                 onClick={() => handleCheckBoxToggle(task.id)}
                               />
@@ -341,9 +341,7 @@ const ToDoList = () => {
                                 <Typography
                                   variant="h6"
                                   className={`text-center ${
-                                    finishedTasks.includes(task.id)
-                                      ? "line-through"
-                                      : ""
+                                    task.completed ? "line-through" : ""
                                   }`}
                                 >
                                   {task.taskName}
@@ -385,7 +383,7 @@ const ToDoList = () => {
                                   </>
                                 }
                                 onChange={(e) =>
-                                  onPriorityChange(e.target.value, task.id)
+                                  updateTaskPriority(task.id, e.target.value)
                                 }
                               >
                                 <MenuItem
