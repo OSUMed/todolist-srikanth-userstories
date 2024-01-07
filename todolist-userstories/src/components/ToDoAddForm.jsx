@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Box,
@@ -29,7 +29,8 @@ const ToDoAddForm = ({ task, setTask, error, setError, handleSubmit }) => {
               value={task}
               onChange={(e) => {
                 setTask(e.target.value);
-                setError(false);
+                if (error) setError(false);
+                console.log("child onChange", e.target.value);
               }}
             />
             <Box>

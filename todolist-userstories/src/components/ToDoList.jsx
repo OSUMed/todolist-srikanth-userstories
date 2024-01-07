@@ -56,6 +56,10 @@ const ToDoList = () => {
     localStorage.setItem("toDoList", toDoListJSON);
   }, [toDoList]);
 
+  useEffect(() => {
+    console.log("task in useeffect", task);
+  }, [task]);
+
   // CRUD Logic:
   const handleMoveUpList = (taskId) => {};
   const handleMoveDownList = (taskId) => {};
@@ -95,10 +99,11 @@ const ToDoList = () => {
   };
 
   const handleCloseSnackBarDialog = () => {
-    setOpenSnackBar({ ...openSnackBar, open: false });
+    setOpenSnackBar({ ...openSnackBar, open: true });
     setToDoList((prevToDoList) => {
       return prevToDoList ? [selectedTask, ...prevToDoList] : [selectedTask];
     });
+    setSelectedTask("");
     setSnackBarMessage("Task restored successfully");
   };
 
@@ -131,21 +136,22 @@ const ToDoList = () => {
       setError(true);
       return;
     }
-    setTask("");
     const newTaskObject = {
       id: new Date().getTime().toString(),
       taskName: task,
       completed: false,
     };
-    setOpenSnackBar({ ...openSnackBar, open: true });
-    setSnackBarMessage("Task added successfully");
     setToDoList((prevToDoList) => {
       return prevToDoList ? [newTaskObject, ...prevToDoList] : [newTaskObject];
     });
 
+    setTask("");
     setError(false);
+    setOpenSnackBar({ ...openSnackBar, open: true });
+    setSnackBarMessage("Task added successfully");
   };
 
+  console.log("task is: ", task);
   return (
     <Box className="h-screen flex flex-col justify-center items-center">
       <Card className="w-[60%] ">
@@ -230,6 +236,7 @@ const ToDoList = () => {
           </List>
 
           <ToDoAddForm
+            key={(toDoList.length > 0 && toDoList[0].id) || 0}
             setToDoList={setToDoList}
             setSnackBarMessage={setSnackBarMessage}
             setOpenSnackBar={setSnackBarMessage}
@@ -264,6 +271,7 @@ const ToDoList = () => {
       />
 
       <MessageSnackbar
+        anchorOrigin={{ vertical, horizontal }}
         open={openSnackBar.open}
         handleClose={handleCloseSnackBar}
         feedbackMessage={snackBarMessage}
