@@ -21,6 +21,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Chip,
 } from "@mui/material";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
@@ -44,7 +45,7 @@ const ToDoList = () => {
     open: false,
     vertical: "bottom",
     horizontal: "right",
-    severity: "",
+    severity: "info",
   });
   const [task, setTask] = useState("");
   const [error, setError] = useState(false);
@@ -64,6 +65,17 @@ const ToDoList = () => {
     const toDoListJSON = JSON.stringify(toDoList);
     localStorage.setItem("toDoList", toDoListJSON);
   }, [toDoList]);
+
+  const sortTasks = (tasks) => {
+    const urgentTasks = tasks.filter((task) => task.priority === "Urgent");
+    const mediumTasks = tasks.filter((task) => task.priority === "Medium");
+    const lowTasks = tasks.filter((task) => task.priority === "Low");
+    const noneTasks = tasks.filter(
+      (task) => task.priority === "" || task.priority === "None"
+    );
+
+    return [...urgentTasks, ...mediumTasks, ...lowTasks, ...noneTasks];
+  };
 
   // CRUD Logic:
 
@@ -96,6 +108,49 @@ const ToDoList = () => {
       reorderedList[currentIndex] = temp[1];
       setToDoList(reorderedList);
     }
+  };
+
+  const updateTaskPriority = (tasks, taskId, newPriority) => {
+    // Grab task and update it:
+    let updatedTask = null;
+    const remainingTasks = tasks.filter((task) => {
+      if (task.id === taskId) {
+        updatedTask = { ...task, priority: newPriority };
+        return false;
+      }
+      return true;
+    });
+
+    // Create Data Strcuture to group tasks by priority
+    const priorityGroups = {
+      Urgent: [],
+      Medium: [],
+      Low: [],
+      None: [],
+    };
+
+    remainingTasks.forEach((task) => {
+      const priority = task.priority || "None";
+      priorityGroups[priority].push(task);
+    });
+
+    // Use spread operator to add it to the front
+    if (updatedTask) {
+      priorityGroups[newPriority] = [
+        updatedTask,
+        ...priorityGroups[newPriority],
+      ];
+    }
+
+    // Update state
+    setToDoList([
+      ...priorityGroups["Urgent"],
+      ...priorityGroups["Medium"],
+      ...priorityGroups["Low"],
+      ...priorityGroups["None"],
+    ]);
+
+    return;
   };
 
   const isTaskCompleted = (taskId) => finishedTasks.includes(taskId);
@@ -149,7 +204,7 @@ const ToDoList = () => {
 
   const action = (
     <React.Fragment>
-      {actionType === "delete" && (
+      {actionType === "delete" ? (
         <>
           <Button
             color="secondary"
@@ -167,6 +222,15 @@ const ToDoList = () => {
             <CloseIcon fontSize="small" />
           </IconButton>
         </>
+      ) : (
+        <IconButton
+          size="small"
+          aria-label="close"
+          color="inherit"
+          onClick={handleCloseSnackBar}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
       )}
     </React.Fragment>
   );
@@ -195,21 +259,44 @@ const ToDoList = () => {
   };
 
   const onPriorityChange = (priority, taskId) => {
-    setPriority(priority);
-    const taskIndex = getTaskIndex(taskId);
-    const newToDoList = [...toDoList];
-    newToDoList[taskIndex].priority = priority;
-    setToDoList(newToDoList);
+    updateTaskPriority(toDoList, taskId, priority);
   };
 
   return (
-    <Box className="h-screen flex flex-col justify-center items-center">
-      <Card className="w-[60%] ">
+    <Box className="h-screen flex flex-col justify-center items-center m-4">
+      <Typography variant="h3" className="mb-4">
+        To Do List
+      </Typography>
+      <Card
+        className={`w-[60%] mx-auto ${
+          toDoList.length === 0 && "h-full"
+        } p-4 flex flex-col justify-center`}
+      >
         <CardContent>
           <List>
             {toDoList.map((task) => (
               <Box className="group" key={task.id}>
                 <ListItem className="group-hover:bg-gray-200 rounded shadow-sm p-2 mb-2 ">
+                  <Chip
+                    label={task.priority === "" ? "None" : task.priority}
+                    color={
+                      task.priority === "Urgent"
+                        ? "error"
+                        : task.priority === "Medium"
+                        ? "warning"
+                        : task.priority === "Low"
+                        ? "primary"
+                        : "default"
+                    }
+                    variant={task.priority === "None" ? "outlined" : "default"}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: "4px",
+                      left: "4px",
+                      zIndex: 1,
+                    }}
+                  ></Chip>
                   <Box
                     className="flex flex-grow"
                     onClick={() => handleCheckBoxToggle(task.id)}
@@ -224,16 +311,18 @@ const ToDoList = () => {
                           />
                         }
                         label={
-                          <Typography
-                            variant="h6"
-                            className={`text-center ${
-                              finishedTasks.includes(task.id)
-                                ? "line-through"
-                                : ""
-                            }`}
-                          >
-                            {task.taskName}
-                          </Typography>
+                          <Box className="flex space-x-3">
+                            <Typography
+                              variant="h6"
+                              className={`text-center ${
+                                finishedTasks.includes(task.id)
+                                  ? "line-through"
+                                  : ""
+                              }`}
+                            >
+                              {task.taskName}
+                            </Typography>
+                          </Box>
                         }
                       />
                     </FormGroup>
@@ -241,7 +330,7 @@ const ToDoList = () => {
 
                   <Box className="flex items-center">
                     <Box>
-                      <Box className="flex flex-col items-end">
+                      <Box className="flex flex-col items-end hidden sm:block">
                         <Box className="flex">
                           <FormControl>
                             <Select
@@ -253,6 +342,7 @@ const ToDoList = () => {
                                 return selected;
                               }}
                               displayEmpty
+                              autoWidth
                               value={
                                 task.priority === "" ? (
                                   "Priority Level"
@@ -262,17 +352,28 @@ const ToDoList = () => {
                                   </Typography>
                                 )
                               }
-                              sx={{ m: 1, width: 150, height: 50 }}
                               onChange={(e) =>
                                 onPriorityChange(e.target.value, task.id)
                               }
                             >
-                              <MenuItem value="None">
+                              <MenuItem value="None" style={{ color: "gray" }}>
                                 <em>None</em>
                               </MenuItem>
-                              <MenuItem value={"Low"}>Low</MenuItem>
-                              <MenuItem value={"Medium"}>Medium</MenuItem>
-                              <MenuItem value={"Urgent"}>Urgent</MenuItem>
+                              <MenuItem value={"Low"} style={{ color: "blue" }}>
+                                Low
+                              </MenuItem>
+                              <MenuItem
+                                value={"Medium"}
+                                style={{ color: "orange" }}
+                              >
+                                Medium
+                              </MenuItem>
+                              <MenuItem
+                                value={"Urgent"}
+                                style={{ color: "red" }}
+                              >
+                                Urgent
+                              </MenuItem>
                             </Select>
                           </FormControl>
                         </Box>
@@ -323,20 +424,7 @@ const ToDoList = () => {
           />
         </CardContent>
       </Card>
-      <Button
-        variant="outlined"
-        // onClick={() => setOpenSnackBar(true)}
-        onClick={() =>
-          setOpenSnackBar({
-            open: true,
-            vertical: "top",
-            horizontal: "left",
-          })
-        }
-        className="p-4"
-      >
-        Open simple dialog
-      </Button>
+
       <HandleDialogClose
         setOpen={setOpenDeleteDialog}
         open={openDeleteDialog}
@@ -415,20 +503,6 @@ const MessageSnackbar = ({
         </Alert>
       </Snackbar>
     </div>
-  );
-};
-
-const PriorityDropdown = ({ priority, onPriorityChange }) => {
-  return (
-    <Select
-      value={priority}
-      onChange={(e) => onPriorityChange(e.target.value)}
-      style={{ marginLeft: "auto" }} // This pushes the dropdown to the right
-    >
-      <MenuItem value={1}>1</MenuItem>
-      <MenuItem value={2}>2</MenuItem>
-      <MenuItem value={3}>3</MenuItem>
-    </Select>
   );
 };
 
