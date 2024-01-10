@@ -8,7 +8,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-Before running the project, you will need to have Node.js and npm (or Yarn) installed on your system. You can download and install them from [Node.js website](https://nodejs.org/).
+1. Before running the project, you will need to have Node.js and npm (or Yarn) installed on your system. You can download and install them from [Node.js website](https://nodejs.org/).
 
 
 2. **Install dependencies:**
