@@ -8,9 +8,16 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-1. Before running the project, you will need to have Node.js and npm (or Yarn) installed on your system. You can download and install them from [Node.js website](https://nodejs.org/).
+Before running the project, you will need to have Node.js and npm (or Yarn) installed on your system. You can download and install them from [Node.js website](https://nodejs.org/).
 
+### Installing
 
+To get the project running, follow these steps:
+
+1. **Clone the repository:**
+- git clone https://github.com/OSUMed/todolist-srikanth-userstories.git
+- cd todolist-srikanth-userstories
+  
 2. **Install dependencies:**
 - Using npm:
   ```
