@@ -25,7 +25,7 @@ To get the project running, follow these steps:
   ```
 - Using Yarn:
   ```
-  yarn
+  yarn install
   ```
 
 3. **Start the development server:**
